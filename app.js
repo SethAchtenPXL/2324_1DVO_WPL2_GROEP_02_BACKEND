@@ -1,9 +1,34 @@
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config()
+const jwt = require('jsonwebtoken');
+var token = require('crypto-token');
+const env = process.env
+
 // Create a single supabase client for interacting with your database
 const supabase = createClient('https://xltvurziufjfokvpqnnw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdHZ1cnppdWZqZm9rdnBxbm53Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMTQ1NDAyMSwiZXhwIjoyMDI3MDMwMDIxfQ.pUk0wzqvrSd2g961qEDmoKqYvwEcSexAuNQwFT6O3jg')
 const express = require('express')
 const app = express()
 const port = 3000
+
+
+
+import { Resend } from 'resend';
+
+const resend = new Resend('re_Rxjymobz_7uooR1d6De2fH9RTbQBEyD6S');
+
+resend.emails.send({
+  from: 'onboarding@resend.dev',
+  to: 'seth.achten@student.pxl.be',
+  subject: 'Hello World',
+  html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+});
+
+  
+
+  
+
+
+
 app.get('/', (req, res) => {
  res.send('Hello World!')
 })
