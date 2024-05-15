@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verified</title>
+</head>
+<body>
+    <h1>Account Verified!</h1>
+    <button id="signOutButton">Schrijf je uit</button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const deleteBtn = document.getElementById('signOutButton');
+            const queryString = window.location.search;
+            const newToken = parseInt(queryString.slice(7));
+            console.log(newToken);
+
+            deleteBtn.addEventListener('click', ()=> {
+                fetch('/api/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ verification_token: newToken })
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            return res.json();
+                        }
+                        throw new Error('Network response was not ok');
+                    })
+                    .then(data => {
+                        console.log('Row deleted succesfully:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                });
+            })
+            
+        })
+
+    </script>
+</body>
+</html>
