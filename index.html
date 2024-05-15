@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>font-end test</title>
+</head>
+<body>
+    <h1>This is a test!</h1>
+    <button id="fetchBtn">Collect supabase data!</button>
+    <br><br>
+    <form id="myForm">
+        <input type="text" name="voornaam" placeholder="Voornaam" required>
+        <input type="text" name="achternaam" placeholder="Achternaam" required>
+        <input type="text" name="email" placeholder="Email" required>
+        <button type="submit">Submit data</button>
+    </form>
+    <form id="deleteForm">
+        <input type="number" name="id" placeholder="id" id="inputId" required>
+        <button type="submit">Delete row</button>
+    </form>
+    <form id="patchForm">
+        <input type="number" name="patchId" placeholder="patchId" id="patchId" required>
+        <button type="submit">Verify row</button>
+    </form>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => { // zorgt er voor dat de javascript pas wordt uitgevoerd nadat de html pagina volledig geladen is
+            const fetchBtn = document.getElementById('fetchBtn');
+            const form = document.getElementById('myForm');
+            const deleteForm = document.getElementById('deleteForm');
+            const patchForm = document.getElementById('patchForm');
+
+            patchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("patch request");
+
+                const formData = document.getElementById('patchId').value;
+                console.log(formData);
+
+                fetch('/api/patch', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: formData })
+                })
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    console.log('Row patched succesfully:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            })
+
+            deleteForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("delete request");
+
+                const formData = document.getElementById('inputId').value;
+                console.log(formData);
+
+                fetch('/api/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: formData })
+                })
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    console.log('Row deleted succesfully:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            })
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("testlog form");
+
+                const formData = new FormData(form);
+                console.log([...formData.entries()]); // deze notatie zorgt ervoor dat je de formData als een array kan loggen
+
+                const formDataObject = {};
+
+                // Zet de data van de form in een array
+                formData.forEach((value, key) => {
+                    formDataObject[key] = value;
+                });
+
+                fetch('/api/new', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formDataObject)
+                })
+                .then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    }
+                    throw new Error('Network response was not ok')
+                })
+                .then(data => {
+                    console.log('Response from server:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+
+            fetchBtn.addEventListener('click', () => {
+                console.log("Here is the supabase")
+                fetch('/api/subscriptions')
+                    .then(res => res.json()) // deze res.json wordt je 'data'
+                    .then(data => console.log(data));
+            });
+            
+            
+        
+        })
+        
+                
+    </script>
+    <style>
+        input {
+            border: 2px solid black;
+            margin: 5px;
+        }    
+        form button {
+            margin: 5px;
+        }
+        form {
+            border-top: 1px solid black;
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+    </style>
+</body>
+</html>
