@@ -6,9 +6,10 @@
 // Create a single supabase client for interacting with your database
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient('https://yzlkvjdkppkodpneavwl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6bGt2amRrcHBrb2RwbmVhdndsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMTQ0ODA5NiwiZXhwIjoyMDI3MDI0MDk2fQ.pvn5m06axtpfKwAPuX4DpB2EtV1X2bJVCw1cVOaxMxQ')
+const cors = require('cors');
 const express = require('express')
 const app = express()
-const port = 3000
+const port = 8000
 const path = require('path');
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
@@ -18,8 +19,7 @@ const transporter = nodemailer.createTransport({
       pass: 'AreYouWaterproof2.'
   }
 });
-
-
+app.use(cors())
 app.use(express.json())
 
 app.get('/', (req, res) => {
@@ -50,7 +50,6 @@ app.get('/api/verify', async (req, res) => {
   res.sendFile(path.join(__dirname, 'landing.html'))
   const verification_token = req.query.token;
   
-
   try {
     // Check if the row exists and its 'confirmed' value is false
     const { data: existingData, error: existingError } = await supabase
@@ -91,73 +90,87 @@ app.get('/api/verify', async (req, res) => {
 })
 
 app.post('/api/new', async (req, res) => {
-  const userData = req.body;
-  const verification_token = Math.floor(Math.random() * 100000000);
-  console.log("token is: "+verification_token);
-  const { data: existingData, error } = await supabase.from('subscriptions').select('id');
+    const userData = req.body;
+    const userEmail = userData.email;
+    const verification_token = Math.floor(Math.random() * 100000000);
+    console.log("token is: "+verification_token);
+    const { data: existingData, error } = await supabase.from('subscriptions').select('id');
 
-  if (error) {
-      // Handle error
-      return res.status(500).json({ error: 'Error fetching data from Supabase' });
-  }
-  // Extract existing IDs from the fetched data
-  const existingIds = existingData.map(record => record.id);
-  // Find the smallest unused integer for the id
-  let id = 1;
-  while (existingIds.includes(id)) {
-      id++;
-  }
-
-  const dataToSend = {
-    confirmed: false,
-    email: userData.email,
-    name: userData.voornaam + " " + userData.achternaam,
-    id: id,
-    verification_token: verification_token
-  }; 
-  /*
-  console.log(userData.voornaam);
-  console.log(userData.achternaam);
-  console.log(userData.email);
-  */
-  console.log("verify req received");
-
-  try {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .insert(dataToSend);
-    
     if (error) {
-      throw error;
-    }  
-
-    console.log('Data inserted successfully');
-    res.status(200).json({ message: 'Data inserted successfully' });
-  } catch (error) {
-    console.error('Error inserting data to Supabase:', error.message);
-    res.status(500).json({ error: 'Error inserting data to Supabase' });
-  }
-
-  const emailContent = `
-    <p>Thank you for signing up!</p>
-    <p>Please click the following link to verify your email:</p>
-    <a href="http://localhost:3000/api/verify?token=${verification_token}">Verify Email here</a>
-`;
-
-  const mailOptions = {
-    from: 'wpl2groep2-24@outlook.com',
-    to: userData.email,
-    subject: 'Email Verification',
-    html: emailContent
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        console.error('Error sending email:', error);
-    } else {
-        console.log('Email sent:', info.response);
+        // Handle error
+        return res.status(500).json({ error: 'Error fetching data from Supabase' });
     }
-});
+    // Extract existing IDs from the fetched data
+    const existingIds = existingData.map(record => record.id);
+    // Find the smallest unused integer for the id
+    let id = 1;
+    while (existingIds.includes(id)) {
+        id++;
+    }
+
+    const dataToSend = {
+      confirmed: false,
+      email: userEmail,
+      name: userData.voornaam + " " + userData.achternaam,
+      id: id,
+      verification_token: verification_token
+    }; 
+    /*
+    console.log(userData.voornaam);
+    console.log(userData.achternaam);
+    console.log(userData.email);
+    */
+    console.log("verify req received");
+
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .insert(dataToSend);
+      
+      if (error) {
+        throw error;
+      }  
+
+      console.log('Data inserted successfully');
+      res.status(200).json({ message: 'Data inserted successfully' });
+    } catch (error) {
+      console.error('Error inserting data to Supabase:', error.message);
+      res.status(500).json({ error: 'Error inserting data to Supabase' });
+    }
+
+    async function isValidEmail(userEmail) {
+      // Regular expression for validating email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+  
+    const emailContent = `
+        <p>Thank you for signing up!</p>
+        <p>Please click the following link to verify your email:</p>
+        <a href="http://localhost:3000/api/verify?token=${verification_token}">Verify Email here</a>
+    `;
+
+    const mailOptions = {
+        from: 'wpl2groep2-24@outlook.com',
+        to: userEmail,
+        subject: 'Email Verification',
+        html: emailContent
+    };
+
+    // Moet nog getest worden
+    const email = 'example@example.com';
+    if (isValidEmail(email)) {
+        console.log('Email is valid');
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+              console.error('Error sending email:', error);
+          } else {
+              console.log('Email sent:', info.response);
+          }
+        });
+    } else {
+        console.log('Email is invalid');
+    }
 
 });
 
